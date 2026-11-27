@@ -11,7 +11,7 @@ import requests
 # ==========================================
 # 1. CONFIGURAÇÃO DA API E DOS ARQUIVOS
 # ==========================================
-API_KEY = ""
+API_KEY = "SUA_CHAVE_AQUI"
 
 CAMINHO_ENTRADA = "dados/locais_para_classificar.csv"
 if not os.path.exists(CAMINHO_ENTRADA):
