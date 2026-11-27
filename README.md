@@ -11,7 +11,7 @@ O sistema resolve o problema da ausência de bases históricas previamente rotul
 1. **Indicadores Temporais (`main.py`):** Identifica deslocamentos realizados fora da janela comercial padrão (madrugada entre `00h00` e `05h59`, fins de semana e feriados nacionais via biblioteca `holidays`).
 2. **Normalização Espacial e Geofencing Diferenciado (`classify.py`):**
    - Padroniza endereços brutos de GPS e agrupa variações de numeração predial próximas ($\pm 50$ números).
-   - **Escritórios da Empresa (`100 m`):** Calcula a distância geodésica (Haversine) até as sedes cadastradas em `escritorios.csv` antes de consultar estabelecimentos comerciais.
+   - **Escritórios da Empresa (`100 m`):** Calcula a distância geodésica (Haversine) até as sedes cadastradas antes de consultar estabelecimentos comerciais.
    - **Hotéis e Aeroportos (`50 m`):** Identifica hubs de viagem via regras determinísticas e *Google Places API (Nearby Search)*.
    - **Restaurantes (`20 m`):** Utiliza raio restrito para evitar falsos positivos em regiões comerciais densas.
 3. **NLP Semântico Multilíngue e Regras de Política (`main.py`):**
@@ -45,20 +45,22 @@ Avaliado sobre uma base operacional de **1.341 registros** (**1.310 corridas vá
 
 ---
 
-## Estrutura do Projeto
+## Estrutura do Projeto e Política de Dados
+
+Por motivos de confidencialidade corporativa e conformidade com a LGPD, **nenhum dado real de corridas, colaboradores ou endereços privados é versionado neste repositório**. A pasta `dados/` disponibiliza exclusivamente os **templates de cabeçalho** com a estrutura esperada pelos scripts:
 
 ```text
 auditoria-uber-nlp/
-├── README.md                     # Documentação geral e resumo dos resultados
-├── requirements.txt              # Dependências Python do projeto
-├── .gitignore                    # Exclusão de dados sensíveis e arquivos temporários
-├── main.py                       # Pipeline principal (Datas, NLP Embeddings, Regras e Score)
-├── classify.py                   # Classificador geográfico híbrido (Haversine + Google Places API)
+├── README.md                       # Documentação geral e resumo dos resultados
+├── requirements.txt                # Dependências Python do projeto
+├── .gitignore                      # Exclusão de bases reais, saídas e credenciais
+├── main.py                         # Pipeline principal (Datas, NLP Embeddings, Regras e Score)
+├── classify.py                     # Classificador geográfico híbrido (Haversine + Google Places API)
 ├── docs/
-│   └── paper_auditoria_uber.pdf  # Artigo técnico compilado em LaTeX
+│   └── paper_auditoria_uber.pdf    # Artigo técnico compilado em LaTeX
 └── dados/
-    ├── escritorios_exemplo.csv   # Modelo de estrutura para endereços corporativos
-    └── amostra_anonimizada.csv   # Amostra fictícia/anonimizada para testes reproduzíveis
+    ├── 2026_cabecalho.csv          # Estrutura de colunas da exportação Uber for Business
+    └── escritorios_cabecalho.csv   # Estrutura de colunas do cadastro de escritórios
 ```
 
 ---
@@ -84,9 +86,16 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Configurar a chave da API do Google Maps (Opcional para classificação geográfica)
+### 3. Preparar os arquivos de entrada a partir dos cabeçalhos
 
-Defina a variável de ambiente antes de rodar o `classify.py`:
+Copie os templates da pasta `dados/` para criar os arquivos de trabalho locais (já protegidos pelo `.gitignore`) e preencha-os com os registros a serem auditados:
+
+* `dados/2026_cabecalho.csv` $\rightarrow$ salvar como `dados/2026.csv` (exportação padrão *Uber for Business* com separador `;` e cabeçalho na linha 5).
+* `dados/escritorios_cabecalho.csv` $\rightarrow$ salvar como `dados/escritorios.csv` (lista de sedes corporativas da organização).
+
+### 4. Configurar a chave da API do Google Maps (Opcional para classificação geográfica)
+
+Defina a variável de ambiente antes de executar o `classify.py`:
 
 ```bash
 # Windows (PowerShell):
@@ -96,7 +105,7 @@ $env:GOOGLE_MAPS_API_KEY="SUA_CHAVE_AQUI"
 export GOOGLE_MAPS_API_KEY="SUA_CHAVE_AQUI"
 ```
 
-### 4. Executar o pipeline
+### 5. Executar o pipeline
 
 ```bash
 # Etapa 1: Gera a lista consolidada de locais e calcula a triagem inicial
@@ -109,4 +118,4 @@ python classify.py
 python main.py
 ```
 
-Os resultados ranqueados serão exportados para `dados/fila_prioridade_auditoria.csv` e `dados/fila_prioridade_auditoria.xlsx`.
+Os resultados ranqueados serão exportados localmente para `dados/fila_prioridade_auditoria.csv` e `dados/fila_prioridade_auditoria.xlsx`.
